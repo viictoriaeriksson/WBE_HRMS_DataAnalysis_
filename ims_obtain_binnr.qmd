@@ -396,11 +396,11 @@ filter_found_compounds(subset_targets, output_direction="C:\\Users\\vicer06\\One
 
 ```{r}
 #RAW data file of IMS-HRMS data in .mzML format
-mz_ims <- "C:\\Users\\vicer06\\OneDrive - Linköpings universitet\\Documents\\01_Projects\\02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024\\NMCTAB_2024_03_21_MSconvert_MSDIAL\\NMCT_StdB_100ppb_gradientchange2_190324_1_A,5_1.mzML"
+mz_ims <- "C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024/NMCTAB_2024_03_21_MSconvert_MSDIAL/NMCT_StdB_100ppb_gradientchange2_190324_1_A,5_1.mzML"
 
-mz_ims <- "C:\\Users\\vicer06\\OneDrive - Linköpings universitet\\Documents\\01_Projects\\02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024\\NMCTAB_2024_03_21_MSconvert_MSDIAL\\NMCT_StdA_100ppb_gradientchange2_190324_1_B,3_2.mzML"
+mz_ims <- "C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024/NMCTAB_2024_03_21_MSconvert_MSDIAL/NMCT_StdA_100ppb_gradientchange2_190324_1_B,3_2.mzML"
 
-mz_ims <- "C:\\Users\\vicer06\\OneDrive - Linköpings universitet\\Documents\\01_Projects\\03_Library_Building_DrugStD\\Individual_Drug_StD\\Drug_StD_240527\\20240527_drugmix_200ppb_woadv_pos_2_C,1_1.mzML"
+mz_ims <- "C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/03_Library_Building_DrugStD/Individual_Drug_StD_240527/Drug_StD_240527/20240527_drugmix_200ppb_woadv_pos_2_C,1_1.mzML"
 
 sp_ims <- Spectra(mz_ims)
 
@@ -412,17 +412,17 @@ sp_ims <- Spectra(mz_ims)
 #)
 
 #import the output from MZmine, when precuros search have been used
-target_compounds <- read_csv("~/01_Projects/02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024/test_arcMSCCS_script_nmcrstdB_100ppb_rep1_MZmine.csv") |> 
+target_compounds <- read_csv("C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024/test_arcMSCCS_script_nmcrstdB_100ppb_rep1_MZmine.csv") |> 
   select("compound_db_identity:compound_name", "mz", "rt", "ion_mobility") |> 
   rename(compound_name="compound_db_identity:compound_name")
 
 
-target_compounds <- read_csv("~/01_Projects/02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024/test_arcMSCCS_script_nmcrstdA_100ppb_rep2_MZmine.csv") |> 
+target_compounds <- read_csv("C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/02_NM-CT-stdAB_Collaboration_CCS_MEASURMENT_2024/test_arcMSCCS_script_nmcrstdA_100ppb_rep2_MZmine.csv") |> 
   select("compound_db_identity:compound_name", "mz", "rt","ion_mobility") |> 
   rename(compound_name="compound_db_identity:compound_name")
 
 #import the output from MZmine, when spectra library search have been used
-target_compounds <- read_csv("~/01_Projects/03_Library_Building_DrugStD/Individual_Drug_StD/Drug_StD_240527/test_arcMSCCS_script_drugmix_woadv_MZmine.csv") |> 
+target_compounds <- read_csv("C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/03_Library_Building_DrugStD/Individual_Drug_StD_240527/Drug_StD_240527/test_arcMSCCS_script_drugmix_woadv_MZmine.csv") |> 
   select("spectral_db_matches:compound_name", "mz", "rt", "ion_mobility") |> 
   rename(compound_name="spectral_db_matches:compound_name")
 ```
@@ -493,12 +493,12 @@ subset_targets <- target_compounds |>
 
 
 
-subset_targets <- target_compounds |> 
-  inner_join(combine_raw_dataframe, join_by(overlaps("mz_min","mz_max","mz_ms1", "mz_ms1"),overlaps("dt_min","dt_max","dtime_ms1", "dtime_ms1")))
+#subset_targets <- target_compounds |> 
+#  inner_join(combine_raw_dataframe, join_by(overlaps("mz_min","mz_max","mz_ms1", "mz_ms1"),overlaps("dt_min","dt_max","dtime_ms1", "dtime_ms1")))
 
 # Only keeps highest intensity of target compounds 
-high_intensity_targets <- subset_targets |> 
-  slice_max(intensity_ms1, by = compound_name)
+#high_intensity_targets <- subset_targets |> 
+#  slice_max(intensity_ms1, by = compound_name)
 
 ```
 
@@ -566,7 +566,7 @@ filters_test2 <- subset_targets |>
     
     
 #save to a .csv-file for input with arcMS package
-write.csv(export_arcMS_CCS, file = "E:\\arcMS scripts\\test_export_arcMS_CCS_drugmixwodav_2.csv", row.names = FALSE)
+write.csv(filters_test2, file = "E:/arcMS scripts/input_arcMS_CCS_NMCTStDB_Average.csv", row.names = FALSE)
 ```
 
 ```{r}
@@ -719,6 +719,25 @@ library_df <- do.call(rbind, lapply(library_compounds, function(x) {
 
 # Merge the data frames on the 'Name' column
 merged_df <- merge(input_arsMS_CCS, library_df, by = "Name", suffixes = c("_data", "_library"))
+
+# Compare the CCS values
+merged_df <- merged_df |> 
+  mutate(CCS_difference = abs(CCS_library - CCS_data)) |> 
+  mutate(CCS_error = CCS_error(CCS_library, CCS_data))
+
+```
+
+```{r}
+## compare CCS with MZmine output containing library CCS-values
+#Import spectral library and output from arcMS with CCS-values
+input_library <- read_delim("~/01_Projects/03_Library_Building_DrugStD/Individual_Drug_StD_240527/Drug_StD_240527/MZmine_output_drugmix_woadv_CCSlibrary.csv", delim = ";", escape_double = FALSE, trim_ws = TRUE) |> 
+  rename(CCS='spectral_db_matches:ccs', Name='spectral_db_matches:compound_name')
+
+input_arsMS_CCS  <- read_delim("C:/Users/vicer06/OneDrive - Linköpings universitet/Documents/01_Projects/03_Library_Building_DrugStD/Individual_Drug_StD_240527/Drug_StD_240527/ccs_drugmixwoadv_testarcMS2_NEW.csv", delim = ";", escape_double = FALSE, trim_ws = TRUE) |> 
+  rename(Name ="compound_name") |> 
+  mutate(CCS = round(CCS, 5))
+
+merged_df <- merge(input_arsMS_CCS, input_library, by = "Name", suffixes = c("_data", "_library"))
 
 # Compare the CCS values
 merged_df <- merged_df |> 
